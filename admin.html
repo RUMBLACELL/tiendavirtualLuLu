@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+
+    <meta charset="UTF-8">
+
+    <title>Dashboard Maestro - TIENDA VIRTUAL (LULU) PERÚ</title>
+
+    <style>
+
+        /* Pantalla de Bloqueo */
+
+#lock-screen {
+
+    position: fixed;
+
+    top: 0; left: 0; width: 100%; height: 100%;
+
+    background: #0f172a;
+
+    display: flex; flex-direction: column;
+
+    justify-content: center; align-items: center;
+
+    z-index: 9999;
+
+}
+
+.lock-card {
+
+    background: #1e293b;
+
+    padding: 30px;
+
+    border-radius: 12px;
+
+    border: 1px solid var(--accent);
+
+    text-align: center;
+
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+
+}
+
+.lock-input {
+
+    padding: 12px;
+
+    margin: 15px 0;
+
+    border-radius: 6px;
+
+    border: 1px solid var(--border);
+
+    background: #0f172a;
+
+    color: white;
+
+    width: 250px;
+
+    font-size: 1rem;
+
+    text-align: center;
+
+}
+
+.hidden-content { display: none !important; }
+
+        :root {
+
+            --accent: #3b82f6;
+
+            --danger: #ef4444;
+
+            --success: #22c55e;
+
+            --warning: #fbbf24;
+
+            --bg-body: #0f172a;
+
+            --bg-card: #1e293b;
+
+            --border: #334155;
+
+           
+
+            /* Colores de Estados */
+
+            --color-pendiente: #fbbf24;
+
+            --color-confirmado: #86efac;
+
+            --color-empacado: #3b82f6;
+
+            --color-enviado: #a855f7;
+
+            --color-entregado: #15803d;
+
+            --color-cancelado: #ef4444;
+
+        }
+
+
+
+        body { background: var(--bg-body); color: #f8fafc; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+
+        .container { max-width: 1100px; margin: auto; }
+
+       
+
+        .admin-card { background: var(--bg-card); padding: 30px; border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+       
+
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--danger); padding-bottom: 15px; margin-bottom: 25px; }
+
+        h1 { margin: 0; font-size: 1.5rem; color: var(--danger); }
+
+
+
+        .form-section { background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 30px; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+
+       
+
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #94a3b8; }
+
+        input, select { width: 100%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border); color: white; border-radius: 6px; box-sizing: border-box; }
+
+       
+
+        .offer-check { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 30px; }
+
+        .offer-check input { width: 20px; height: 20px; cursor: pointer; }
+
+
+
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+
+        .btn-add { background: var(--success); color: white; width: 100%; margin-top: 15px; }
+
+        .btn-close { background: var(--danger); color: white; }
+
+
+
+        .inventory-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.85rem; }
+
+        .inventory-table th { background: #334155; color: #94a3b8; text-align: left; padding: 12px; }
+
+        .inventory-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+       
+
+        .badge-offer { background: var(--warning); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
+
+        .badge-edit { background: var(--accent); color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; border:none; }
+
+        .badge-delete { background: var(--danger); color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; border:none; margin-top: 5px; width: 100%; }
+
+
+
+        .img-preview { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+
+
+
+        .select-status { font-weight: bold; border: none; padding: 5px; border-radius: 4px; cursor: pointer; color: #000 !important; }
+
+        .status-pendiente { background-color: var(--color-pendiente); }
+
+        .status-confirmado { background-color: var(--color-confirmado); }
+
+        .status-empacado { background-color: var(--color-empacado); color: white !important; }
+
+        .status-enviado { background-color: var(--color-enviado); color: white !important; }
+
+        .status-entregado { background-color: var(--color-entregado); color: white !important; }
+
+        .status-cancelado { background-color: var(--color-cancelado); color: white !important; }
+
+    </style>
+
+</head>
+
+<body>
+
+<div id="lock-screen">
+
+    <div class="lock-card">
+
+        <h2 style="color: var(--danger)">🔑 Acceso Restringido</h2>
+
+        <p>Introduce la clave de administrador:</p>
+
+        <input type="password" id="admin-pass" class="lock-input" placeholder="Contraseña">
+
+    <button type="button" class="btn btn-add" onclick="verificarClave()">Entrar al Panel</button>
+
+    </div>
+
+</div>
+
+
+
+<div id="main-content" class="hidden-content">
+
+    <div class="container">
+
+        </div>
+
+<div class="container">
+
+    <div class="admin-card">
+
+        <header>
+
+            <h1>🛠️ Panel de Control (LUCIANO)</h1>
+
+            <button class="btn btn-close" onclick="window.location.href='index.html'">Volver a la Tienda</button>
+
+        </header>
+
+
+
+        <div class="form-section">
+
+            <h3 style="margin-top:0">➕ Publicar Nuevo Producto</h3>
+
+            <form id="product-form">
+
+                <div class="form-grid">
+
+                    <div>
+
+                        <label>Cantidad en Stock</label>
+
+                        <input type="number" id="p-stock" placeholder="Ej: 10" min="0" required>
+
+                    </div>
+
+                    <div>
+
+                        <label>Nombre del Producto</label>
+
+                        <input type="text" id="p-name" placeholder="Ej: Kit Grooming Max" required>
+
+                    </div>
+
+                    <div>
+
+                        <label>Precio Normal (S/)</label>
+
+                        <input type="number" id="p-price" placeholder="0.00" step="0.01" required>
+
+                    </div>
+
+                    <div>
+
+                        <label>Imagen (Desde tu dispositivo)</label>
+
+                        <input type="file" id="p-img-file" accept="image/*" required>
+
+                        <input type="hidden" id="p-img-base64">
+
+                    </div>
+
+                    <div class="offer-check">
+
+                        <input type="checkbox" id="p-is-offer" onchange="toggleOfferInput()">
+
+                        <label for="p-is-offer" style="color: var(--warning); margin:0">¿En Oferta?</label>
+
+                    </div>
+
+                    <div id="offer-price-container" style="display: none;">
+
+                        <label>Precio Oferta (S/)</label>
+
+                        <input type="number" id="p-offer-price" placeholder="0.00" step="0.01">
+
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-add">Guardar y Subir a Tienda</button>
+
+            </form>
+
+        </div>
+
+
+
+        <table class="inventory-table">
+
+           <thead>
+
+                <tr>
+
+                    <th>Imagen</th>
+
+                    <th>Producto</th>
+
+                    <th>Precio Base</th>
+
+                    <th>Stock Actual</th>
+
+                    <th>Oferta</th>
+
+                    <th>Acciones</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="inventory-body"></tbody>
+
+        </table>
+
+
+
+        <hr style="border: 1px solid var(--border); margin: 40px 0;">
+
+
+
+        <h3>📝 Pedidos de Clientes</h3>
+
+        <div style="overflow-x: auto;">
+
+            <table class="inventory-table" style="background: rgba(15, 23, 42, 0.5);">
+
+               <thead>
+
+    <tr>
+
+        <th>Fecha</th>
+
+        <th>Cliente / DNI / Celular</th> <th>Producto</th>
+
+        <th>Ubicación / Dirección</th>
+
+        <th>Estado Actual</th>
+
+        <th>Acción</th>
+
+    </tr>
+
+</thead>
+
+                <tbody id="pedidos-body"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+    // 1. Configuración de Firebase (Tus llaves)
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyBg5CBz8fXgLZDEaKfHmgv71Cxif77XBxo",
+
+        authDomain: "luluperu-efa88.firebaseapp.com",
+
+        databaseURL: "https://luluperu-efa88-default-rtdb.firebaseio.com",
+
+        projectId: "luluperu-efa88",
+
+        storageBucket: "luluperu-efa88.firebasestorage.app",
+
+        messagingSenderId: "51737291394",
+
+        appId: "1:51737291394:web:3013c06f461cddd579629b"
+
+    };
+
+
+
+    firebase.initializeApp(firebaseConfig);
+
+    const db = firebase.database();
+
+
+
+    // --- SEGURIDAD (TU CLAVE ROMY-GALA) ---
+
+    function verificarClave() {
+
+        const input = document.getElementById('admin-pass').value.trim().toUpperCase();
+
+        if (input === "ROMY-GALA") {
+
+            sessionStorage.setItem('lulu_auth', 'active');
+
+            mostrarPanel();
+
+        } else {
+
+            alert("Error: Clave incorrecta");
+
+        }
+
+    }
+
+
+
+    function mostrarPanel() {
+
+        document.getElementById('lock-screen').style.display = 'none';
+
+        document.getElementById('main-content').classList.remove('hidden-content');
+
+        sincronizarConNube();
+
+    }
+
+
+
+    // --- CONEXIÓN REAL CON FIREBASE ---
+
+    function sincronizarConNube() {
+
+        // Escuchar productos
+
+        db.ref('productos').on('value', (snapshot) => {
+
+            const prods = snapshot.val() || [];
+
+            renderAdminTable(prods);
+
+        });
+
+
+
+        // Escuchar pedidos
+
+        db.ref('pedidos').on('value', (snapshot) => {
+
+            const peds = snapshot.val() || {};
+
+            renderPedidos(peds);
+
+        });
+
+    }
+
+
+
+    // --- TU TABLA DE PRODUCTOS ORIGINAL ---
+
+    function renderAdminTable(prods) {
+
+        const invBody = document.getElementById('inventory-body');
+
+        invBody.innerHTML = prods.map((p, i) => {
+
+            const stockColor = p.stock <= 0 ? 'var(--danger)' : (p.stock <= 3 ? 'var(--warning)' : 'var(--success)');
+
+            return `
+
+                <tr>
+
+                    <td><img src="${p.img}" class="img-preview"></td>
+
+                    <td>${p.name}</td>
+
+                    <td>S/ ${p.price}</td>
+
+                    <td>
+
+                        <b style="color: ${stockColor}; font-size: 1.1rem;">${p.stock}</b> unidades
+
+                        <div style="margin-top:5px">
+
+                            <button onclick="cambiarStockNube(${i}, 1)" style="padding:2px 8px; cursor:pointer">+</button>
+
+                            <button onclick="cambiarStockNube(${i}, -1)" style="padding:2px 8px; cursor:pointer">-</button>
+
+                        </div>
+
+                    </td>
+
+                    <td>
+
+                        ${p.onOffer ? `<span class="badge-offer">OFERTA: S/ ${p.offerPrice}</span>` : '<span style="color:#64748b">Sin oferta</span>'}
+
+                    </td>
+
+                    <td>
+
+                        <button class="badge-edit" onclick="toggleOfferStatusNube(${i})">
+
+                            ${p.onOffer ? 'Quitar Oferta' : 'Poner Oferta'}
+
+                        </button>
+
+                        <button class="badge-delete" onclick="eliminarProductoNube(${i})">Eliminar</button>
+
+                    </td>
+
+                </tr>`;
+
+        }).join('');
+
+    }
+
+
+
+    // --- TU TABLA DE PEDIDOS ORIGINAL (CON TUS COLORES) ---
+
+    function renderPedidos(pedidosObj) {
+
+        const pedidosBody = document.getElementById('pedidos-body');
+
+        pedidosBody.innerHTML = "";
+
+       
+
+        Object.keys(pedidosObj).reverse().forEach((id) => {
+
+            const ped = pedidosObj[id];
+
+            const estadoClase = `status-${ped.estado?.toLowerCase() || 'pendiente'}`;
+
+
+
+            pedidosBody.innerHTML += `
+
+                <tr>
+
+                    <td><small>${ped.fecha || 'Sin fecha'}</small></td>
+
+                    <td><b>${ped.cliente}</b><br><small style="color: #94a3b8">DNI: ${ped.dni}</small><br>
+
+                    <a href="https://wa.me/51${ped.celular}" target="_blank" style="color:#22c55e; text-decoration:none;">📱 ${ped.celular}</a></td>
+
+                    <td><span style="color: var(--accent)">${ped.producto}</span></td>
+
+                    <td><i style="color: #94a3b8;">${ped.ubicacion}</i><br><b>Dir:</b> ${ped.direccion}</td>
+
+                    <td>
+
+                        <select class="select-status ${estadoClase}" onchange="cambiarEstadoPedido('${id}', this.value)">
+
+                            <option value="Pendiente" ${ped.estado === 'Pendiente' ? 'selected' : ''}>⚠️ PENDIENTE</option>
+
+                            <option value="Confirmado" ${ped.estado === 'Confirmado' ? 'selected' : ''}>✅ CONFIRMADO</option>
+
+                            <option value="Empacado" ${ped.estado === 'Empacado' ? 'selected' : ''}>📦 EMPACADO</option>
+
+                            <option value="Enviado" ${ped.estado === 'Enviado' ? 'selected' : ''}>🚚 ENVIADO</option>
+
+                            <option value="Entregado" ${ped.estado === 'Entregado' ? 'selected' : ''}>🏠 ENTREGADO</option>
+
+                            <option value="Cancelado" ${ped.estado === 'Cancelado' ? 'selected' : ''}>❌ CANCELADO</option>
+
+                        </select>
+
+                    </td>
+
+                    <td><button class="badge-delete" onclick="borrarPedidoNube('${id}')">Eliminar</button></td>
+
+                </tr>`;
+
+        });
+
+    }
+
+
+
+    // --- FUNCIONES DE ACCIÓN ---
+
+    function cambiarStockNube(index, cambio) {
+
+        db.ref('productos').once('value').then(s => {
+
+            let p = s.val();
+
+            p[index].stock = Math.max(0, (parseInt(p[index].stock) || 0) + cambio);
+
+            db.ref('productos').set(p);
+
+        });
+
+    }
+
+
+
+    function toggleOfferStatusNube(i) {
+
+        db.ref('productos').once('value').then(s => {
+
+            let p = s.val();
+
+            if (p[i].onOffer) {
+
+                p[i].onOffer = false; p[i].offerPrice = null;
+
+            } else {
+
+                const newPrice = prompt("Precio de oferta para " + p[i].name);
+
+                if (newPrice) { p[i].onOffer = true; p[i].offerPrice = parseFloat(newPrice).toFixed(2); }
+
+            }
+
+            db.ref('productos').set(p);
+
+        });
+
+    }
+
+
+
+    function cambiarEstadoPedido(id, nuevoEstado) {
+
+        db.ref('pedidos/' + id).update({ estado: nuevoEstado });
+
+    }
+
+
+
+    function borrarPedidoNube(id) {
+
+        if(confirm("¿Eliminar pedido?")) db.ref('pedidos/' + id).remove();
+
+    }
+
+
+
+    function eliminarProductoNube(i) {
+
+        if(confirm("¿Eliminar producto?")) {
+
+            db.ref('productos').once('value').then(s => {
+
+                let p = s.val(); p.splice(i, 1); db.ref('productos').set(p);
+
+            });
+
+        }
+
+    }
+
+
+
+    // --- FORMULARIO Y IMAGEN ---
+
+    document.getElementById('product-form').onsubmit = (e) => {
+
+        e.preventDefault();
+
+        const img = document.getElementById('p-img-base64').value;
+
+        if(!img) return alert("Cargando imagen...");
+
+        db.ref('productos').once('value').then(s => {
+
+            const p = s.val() || [];
+
+            p.push({
+
+                name: document.getElementById('p-name').value,
+
+                price: parseFloat(document.getElementById('p-price').value).toFixed(2),
+
+                stock: parseInt(document.getElementById('p-stock').value) || 0,
+
+                img: img,
+
+                onOffer: document.getElementById('p-is-offer').checked,
+
+                offerPrice: document.getElementById('p-is-offer').checked ? parseFloat(document.getElementById('p-offer-price').value).toFixed(2) : null
+
+            });
+
+            db.ref('productos').set(p);
+
+            e.target.reset();
+
+            document.getElementById('p-img-base64').value = "";
+
+        });
+
+    };
+
+
+
+    document.getElementById('p-img-file').onchange = function(e) {
+
+        const reader = new FileReader();
+
+        reader.onload = () => { document.getElementById('p-img-base64').value = reader.result; };
+
+        reader.readAsDataURL(e.target.files[0]);
+
+    };
+
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        if (sessionStorage.getItem('lulu_auth') === 'active') mostrarPanel();
+
+    });
+
+</script>
+
+</body>
+
+</html>

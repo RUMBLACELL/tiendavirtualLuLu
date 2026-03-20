@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tienda Virtual LULU PERÚ</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --accent: #3b82f6;
+      --bg-body: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+
+    body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; }
+    header { background: var(--bg-card); padding: 20px; border-bottom: 1px solid var(--border); text-align: center; position: relative; }
+    .container { max-width: 1000px; margin: 30px auto; padding: 0 16px; }
+    
+    .admin-access { position: absolute; top: 10px; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; }
+
+    .badge-oferta-amarilla {
+        position: absolute; top: 10px; right: 10px; background: #facc15; color: #000;
+        padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem;
+        box-shadow: 0 4px 10px rgba(250, 204, 21, 0.4); z-index: 5; text-transform: uppercase;
+    }
+
+    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start; }
+
+    .card {
+        background: var(--bg-card); border: 2px solid var(--accent); border-radius: 16px;
+        text-align: center; transition: 0.3s; display: flex; flex-direction: column;
+        width: 320px; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .card img { width: 100%; height: 350px; object-fit: cover; display: block; border-bottom: 2px solid var(--accent); }
+    .card-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; gap: 10px; }
+
+    .btn { 
+        width: calc(100% - 30px); margin: 0 auto 15px auto; padding: 12px; 
+        background: var(--accent); color: white; border-radius: 8px; border: none; 
+        font-weight: 600; cursor: pointer; transition: 0.2s; 
+    }
+
+    #modal-container, #login-modal { display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; }
+    .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
+    .modal-content { position: relative; background: var(--bg-card); width: 95%; max-width: 400px; padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
+    .form-group { margin-bottom: 12px; }
+    .form-control { width: 100%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="admin-access" onclick="openLogin()">⚙️</button>
+  <h1>🏪 Tienda virtual (LULU) PERÚ</h1>
+  <p style="color: var(--text-muted)">Envíos gratis</p>
+</header>
+
+<main class="container">
+  <div id="product-container" class="products"></div>
+</main>
+
+<div id="modal-container">
+  <div class="backdrop" onclick="document.getElementById('modal-container').style.display='none'"></div>
+  <div class="modal-content">
+    <h3 id="prod-title" style="margin-top:0">Registro de Envío</h3>
+    <form id="order-form">
+      <div class="form-group"><input type="text" placeholder="Nombre completo" class="form-control" required></div>
+      <div class="form-group"><input type="text" placeholder="DNI (8 dígitos)" class="form-control" pattern="[0-9]{8}" required></div>
+      <div class="form-group"><input type="tel" placeholder="Número de Celular" class="form-control" pattern="[0-9]{9}" required></div>
+      <div class="form-group"><select id="sel-region" class="form-control" required><option value="">Región...</option></select></div>
+      <div class="form-group"><select id="sel-provincia" class="form-control" required disabled><option value="">Provincia...</option></select></div>
+      <div class="form-group"><select id="sel-distrito" class="form-control" required disabled><option value="">Distrito...</option></select></div>
+      <div class="form-group"><input type="text" id="direccion" placeholder="Dirección exacta" class="form-control" required></div>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button type="button" class="btn" style="background:#475569" onclick="document.getElementById('modal-container').style.display='none'">Cancelar</button>
+        <button type="submit" class="btn">Confirmar Pedido</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="login-modal">
+  <div class="backdrop" onclick="closeLogin()"></div>
+  <div class="modal-content">
+    <h3>Acceso Administrador</h3>
+    <form id="login-form">
+      <div class="form-group"><input type="text" id="admin-user" placeholder="Usuario" class="form-control" required></div>
+      <div class="form-group"><input type="password" id="admin-pass" placeholder="Contraseña" class="form-control" required></div>
+      <button type="submit" class="btn">Ingresar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+    // FIREBASE CONFIG
+    const firebaseConfig = {
+        apiKey: "AIzaSyBg5CBz8fXgLZDEaKfHmgv71Cxif77XBxo",
+        authDomain: "luluperu-efa88.firebaseapp.com",
+        databaseURL: "https://luluperu-efa88-default-rtdb.firebaseio.com",
+        projectId: "luluperu-efa88",
+        storageBucket: "luluperu-efa88.firebasestorage.app",
+        messagingSenderId: "51737291394",
+        appId: "1:51737291394:web:3013c06f461cddd579629b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // RENDER TIENDA
+    function renderShop() {
+        db.ref('productos').on('value', (snapshot) => {
+            const prods = snapshot.val();
+            const container = document.getElementById('product-container');
+            container.innerHTML = ""; 
+            if (!prods) { container.innerHTML = "<h2>Cargando...</h2>"; return; }
+
+            prods.forEach(p => {
+                let precioHTML = p.onOffer ? 
+                    `<div style="margin: 10px 0;"><span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.9rem;">S/ ${p.price}</span><br><span style="color: #facc15; font-weight: bold; font-size: 1.5rem;">S/ ${p.offerPrice}</span></div>` : 
+                    `<span style="font-size: 1.5rem; font-weight: bold;">S/ ${p.price}</span>`;
+                
+                container.innerHTML += `
+                    <article class="card">
+                        ${p.onOffer ? '<span class="badge-oferta-amarilla">OFERTA 🔥</span>' : ''}
+                        <img src="${p.img}">
+                        <div class="card-info"><h2>${p.name}</h2>${precioHTML}<p>Stock: ${p.stock}</p></div>
+                        <button class="btn js-buy" data-name="${p.name}">Comprar Ahora</button>
+                    </article>`;
+            });
+            document.querySelectorAll('.js-buy').forEach(b => {
+                b.onclick = () => {
+                    document.getElementById('prod-title').innerText = "Pedido: " + b.dataset.name;
+                    document.getElementById('modal-container').style.display = 'flex';
+                };
+            });
+        });
+    }
+
+    // TU BASE DE DATOS DE REGIONES COMPLETA (RESTAURADA)
+    const ubigeo = {
+        "Lima": { "Lima": ["Miraflores", "San Isidro", "Santiago de Surco", "La Molina", "San Borja", "San Miguel", "Magdalena del Mar", "Lince", "Jesus Maria", "Pueblo Libre", "Los Olivos", "San Juan de Lurigancho", "Ate", "Chorrillos", "Villa El Salvador"], "Callao": ["Callao", "Bellavista", "La Perla", "La Punta", "Carmen de la Legua", "Ventanilla"], "Cañete": ["San Vicente de Cañete", "Asia", "Mala", "Lunahuaná", "Imperial"] },
+        "Junín": { "Chanchamayo": ["San Ramón", "La Merced", "Pichanaqui", "Perené", "Vítoc", "San Luis de Shuaro"], "Huancayo": ["Huancayo", "El Tambo", "Chilca", "San Jerónimo de Tunán", "Pilcomayo"], "Tarma": ["Tarma", "Acobamba", "Palca", "Tapo"], "Satipo": ["Satipo", "Mazamari", "Pangoa", "Coviriali"] },
+        "Pasco": { "Oxapampa": ["Oxapampa", "Chontabamba", "Huancabamba", "Pozuzo", "Villa Rica", "Puerto Bermúdez", "Constitución"], "Pasco": ["Chaupimarca", "Yanacancha", "Vicco", "Tinyahuarco"], "Daniel Alcides Carrión": ["Yanahuanca", "Paucar", "San Pedro de Pillao"] },
+        "Arequipa": { "Arequipa": ["Arequipa", "Cayma", "Yanahuara", "Cerro Colorado", "Jose Luis Bustamante y Rivero", "Miraflores"], "Camaná": ["Camaná", "Jose Maria Quimper", "Samuel Pastor"], "Islay": ["Mollendo", "Mejia", "Cocachacra"] },
+        "Cusco": { "Cusco": ["Cusco", "San Jerónimo", "San Sebastián", "Santiago", "Wanchaq"], "Urubamba": ["Urubamba", "Ollantaytambo", "Machupicchu", "Chinchero"], "La Convención": ["Santa Ana (Quillabamba)", "Echarate", "Pichari"] },
+        "Puno": { "Puno": ["Puno", "Acora", "Platería"], "San Román": ["Juliaca", "Caracoto", "Cabana"] },
+        "Ancash": { "Santa": ["Chimbote", "Nuevo Chimbote", "Coishco"], "Huaraz": ["Huaraz", "Independencia"] },
+        "La Libertad": { "Trujillo": ["Trujillo", "Huanchaco", "El Porvenir", "La Esperanza", "Victor Larco Herrera", "Moche"], "Pacasmayo": ["San Pedro de Lloc", "Pacasmayo", "Guadalupe"] },
+        "Piura": { "Piura": ["Piura", "Castilla", "Catacaos", "Veintiséis de Octubre", "Tambogrande"], "Sullana": ["Sullana", "Bellavista", "Querecotillo"], "Talara": ["Pariñas", "Lobitos", "Máncora", "Los Órganos"] },
+        "Lambayeque": { "Chiclayo": ["Chiclayo", "Jose Leonardo Ortiz", "La Victoria", "Pimentel", "Reque"], "Lambayeque": ["Lambayeque", "Olmos", "Motupe", "Íllimo"] },
+        "Ica": { "Ica": ["Ica", "La Tinguiña", "Parcona", "Subtanjalla"], "Chincha": ["Chincha Alta", "Sunampe", "Grocio Prado", "Pueblo Nuevo"], "Pisco": ["Pisco", "Paracas", "San Andrés"] },
+        "Loreto": { "Maynas": ["Iquitos", "Punchana", "Belén", "San Juan Bautista"], "Alto Amazonas": ["Yurimaguas"] },
+        "Ucayali": { "Coronel Portillo": ["Pucallpa", "Yarinacocha", "Callería"], "Padre Abad": ["Aguaytía"] },
+        "San Martín": { "Moyobamba": ["Moyobamba", "Jepelacio"], "San Martín": ["Tarapoto", "Morales", "La Banda de Shilcayo"], "Rioja": ["Rioja", "Nueva Cajamarca"] },
+        "Ayacucho": { "Huamanga": ["Ayacucho", "Carmen Alto", "San Juan Bautista"], "Huanta": ["Huanta", "Llochegua"] },
+        "Cajamarca": { "Cajamarca": ["Cajamarca", "Baños del Inca", "Encañada"], "Jaén": ["Jaén", "Bellavista", "Pucará"] },
+        "Tacna": { "Tacna": ["Tacna", "Alto de la Alianza", "Ciudad Nueva", "Pocollay"] },
+        "Huánuco": { "Huánuco": ["Huánuco", "Amarilis", "Pillco Marca"], "Leoncio Prado": ["Tingo María", "Castillo Grande", "Rupa-Rupa"] }
+    };
+
+    const sRegion = document.getElementById('sel-region');
+    const sProvincia = document.getElementById('sel-provincia');
+    const sDistrito = document.getElementById('sel-distrito');
+    Object.keys(ubigeo).sort().forEach(reg => sRegion.add(new Option(reg, reg)));
+
+    sRegion.onchange = function() {
+        sProvincia.innerHTML = '<option value="">Provincia...</option>';
+        sDistrito.innerHTML = '<option value="">Distrito...</option>';
+        if (this.value) { sProvincia.disabled = false; Object.keys(ubigeo[this.value]).forEach(p => sProvincia.add(new Option(p, p))); }
+    };
+    sProvincia.onchange = function() {
+        sDistrito.innerHTML = '<option value="">Distrito...</option>';
+        if (this.value) { sDistrito.disabled = false; ubigeo[sRegion.value][this.value].forEach(d => sDistrito.add(new Option(d, d))); }
+    };
+
+    // ENVÍO DE PEDIDO A FIREBASE Y WHATSAPP
+    document.getElementById('order-form').onsubmit = (e) => {
+        e.preventDefault();
+        const miTelefono = "986827951";
+        const form = e.target.elements;
+        const pedido = {
+            fecha: new Date().toLocaleString('es-PE'),
+            cliente: form[0].value,
+            dni: form[1].value,
+            celular: form[2].value,
+            producto: document.getElementById('prod-title').innerText.replace("Pedido: ", ""),
+            ubicacion: `${sRegion.value} / ${sProvincia.value} / ${sDistrito.value}`,
+            direccion: document.getElementById('direccion').value,
+            estado: "Pendiente"
+        };
+        db.ref('pedidos').push(pedido);
+        const msj = `*LULU PERÚ - NUEVO PEDIDO*%0A*${pedido.producto}*%0A*Cliente:* ${pedido.cliente}%0A*DNI:* ${pedido.dni}%0A*Ubicación:* ${pedido.ubicacion}%0A*Dirección:* ${pedido.direccion}`;
+        window.open(`https://api.whatsapp.com/send?phone=${miTelefono}&text=${msj}`, '_blank');
+        document.getElementById('modal-container').style.display = 'none';
+        e.target.reset();
+    };
+
+    // LOGIN LUCIANO
+    function openLogin() { document.getElementById('login-modal').style.display = 'flex'; }
+    function closeLogin() { document.getElementById('login-modal').style.display = 'none'; }
+    document.getElementById('login-form').onsubmit = function(e) {
+        e.preventDefault();
+        const u = document.getElementById('admin-user').value.trim().toUpperCase();
+        const p = document.getElementById('admin-pass').value.trim().toUpperCase();
+        if (btoa(u) === "TFVDSUFOTzE5OTk=" && btoa(p) === "UlVNQkxBQ0VMTA==") { window.location.href = 'admin.html'; }
+        else { alert("Acceso denegado"); }
+    };
+
+    document.addEventListener('DOMContentLoaded', renderShop);
+</script>
+</body>
+</html>
