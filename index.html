@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Tienda Virtual LULU PERÚ</title>
+  <title>LULU PERÚ | Tienda Virtual</title>
   
   <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
@@ -11,54 +11,173 @@
   <style>
     :root {
       --accent: #3b82f6;
-      --bg-body: #0f172a;
-      --bg-card: #1e293b;
+      --accent-hover: #2563eb;
+      --bg-1: #0f172a;
+      --bg-2: #1e1b4b;
+      --bg-3: #020617;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border: #334155;
+      --success: #22c55e;
     }
 
-    body { margin: 0; background: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; }
-    header { background: var(--bg-card); padding: 20px; border-bottom: 1px solid var(--border); text-align: center; position: relative; }
-    .container { max-width: 1000px; margin: 30px auto; padding: 0 16px; }
+    body { 
+        margin: 0; 
+        color: var(--text-main); 
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; 
+        line-height: 1.5;
+        background: linear-gradient(-45deg, #0f172a, #1e1b4b, #2e1065, #020617);
+        background-size: 400% 400%;
+        animation: animarFondo 15s ease infinite;
+        min-height: 100vh;
+        background-attachment: fixed;
+    }
+
+    @keyframes animarFondo {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    header { 
+        background: url('https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=2072&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        padding: 70px 20px; 
+        border-bottom: 1px solid var(--border); 
+        text-align: center; 
+        position: relative; 
+        overflow: hidden;
+    }
+
+    header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 10, 30, 0.45);
+        z-index: 1;
+    }
+
+    header > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    .titulo-universo {
+        font-size: 2.8rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin: 0;
+        color: #ffffff;
+        text-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 4px 10px rgba(0, 0, 0, 0.8);
+        letter-spacing: 2px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
     
-    .admin-access { position: absolute; top: 10px; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; }
+    .admin-access { 
+        position: absolute; top: 15px; right: 15px; 
+        background: rgba(255,255,255,0.1); border: none; 
+        border-radius: 50%; width: 40px; height: 40px;
+        cursor: pointer; font-size: 1.1rem; transition: 0.3s;
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10;
+    }
+    .admin-access:hover { background: rgba(255,255,255,0.25); transform: rotate(45deg); }
 
-    .badge-oferta-amarilla {
-        position: absolute; top: 10px; right: 10px; background: #facc15; color: #000;
-        padding: 5px 12px; border-radius: 20px; font-weight: 800; font-size: 0.75rem;
-        box-shadow: 0 4px 10px rgba(250, 204, 21, 0.4); z-index: 5; text-transform: uppercase;
+    .badge-oferta {
+        position: absolute; top: 10px; left: 10px; 
+        color: #fff;
+        padding: 15px 12px 10px 12px; 
+        font-weight: 900; font-size: 0.75rem;
+        z-index: 5;
+        text-transform: uppercase;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        background: linear-gradient(to top, #d72626 20%, #f97316 60%, #fbbf24 100%);
+        clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+        display: flex; align-items: center; justify-content: center;
+        text-align: center;
+        min-width: 85px; 
+        animation: estrella-viva 0.6s infinite alternate ease-in-out;
     }
 
-    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start; }
+    @keyframes estrella-viva {
+        0% { transform: scale(1) skewX(-2deg); filter: brightness(1); }
+        100% { transform: scale(1.05) skewX(2deg); filter: brightness(1.2) drop-shadow(0 0 10px #f97316); }
+    }
+
+    .products { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+        gap: 25px; 
+    }
 
     .card {
-        background: var(--bg-card); border: 2px solid var(--accent); border-radius: 16px;
-        text-align: center; transition: 0.3s; display: flex; flex-direction: column;
-        width: 320px; overflow: hidden; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(5px);
+        border: 1px solid var(--border); border-radius: 20px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        overflow: hidden; position: relative;
+        display: flex; flex-direction: column;
     }
-    .card img { width: 100%; height: 350px; object-fit: cover; display: block; border-bottom: 2px solid var(--accent); }
-    .card-info { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; gap: 10px; }
+    .card:hover { 
+        transform: translateY(-10px); 
+        border-color: var(--accent);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .card img { width: 100%; height: 320px; object-fit: cover; transition: 0.5s; }
+    .card:hover img { transform: scale(1.05); }
+
+    .card-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-info h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+
+    .price-tag { margin: 15px 0; }
+    .original-price { text-decoration: line-through; color: var(--text-muted); font-size: 0.9rem; }
+    .current-price { color: var(--accent); font-weight: 800; font-size: 1.6rem; display: block; }
 
     .btn { 
-        width: calc(100% - 30px); margin: 0 auto 15px auto; padding: 12px; 
-        background: var(--accent); color: white; border-radius: 8px; border: none; 
-        font-weight: 600; cursor: pointer; transition: 0.2s; 
+        width: 100%; padding: 14px; 
+        background: var(--accent); color: white; 
+        border-radius: 12px; border: none; 
+        font-weight: 700; cursor: pointer; transition: 0.3s;
+        text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .btn:hover { background: var(--accent-hover); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+
+    #modal-container, #login-modal { 
+        display: none; position: fixed; inset: 0; z-index: 9999; 
+        align-items: center; justify-content: center; padding: 20px;
+    }
+    .backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); }
+    .modal-content { 
+        position: relative; background: var(--bg-1); width: 100%; max-width: 450px; 
+        padding: 30px; border-radius: 24px; border: 1px solid var(--border);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    #modal-container, #login-modal { display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; }
-    .backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
-    .modal-content { position: relative; background: var(--bg-card); width: 95%; max-width: 400px; padding: 25px; border-radius: 15px; border: 1px solid var(--border); }
-    .form-group { margin-bottom: 12px; }
-    .form-control { width: 100%; padding: 10px; background: var(--bg-body); border: 1px solid var(--border); color: white; border-radius: 8px; box-sizing: border-box; }
+    .form-control { 
+        width: 100%; padding: 12px 15px; background: #0f172a; 
+        border: 1px solid var(--border); color: white; border-radius: 10px; 
+        box-sizing: border-box; font-size: 1rem; margin-top: 8px;
+    }
+    .form-control:focus { outline: none; border-color: var(--accent); }
+
+    @media (max-width: 600px) {
+        header { padding: 50px 15px; }
+        .products { grid-template-columns: 1fr; }
+        .titulo-universo { font-size: 1.8rem; }
+    }
   </style>
 </head>
 <body>
 
 <header>
   <button class="admin-access" onclick="openLogin()">⚙️</button>
-  <h1>🏪 Tienda virtual (LULU) PERÚ</h1>
-  <p style="color: var(--text-muted)">Envíos gratis</p>
+<img src="https://i.postimg.cc/rwNNqF4q/cf1c52cf63c043268c4f2dc911317466-free.png" style="width:100px; border-radius:50%; margin-bottom:15px; border:2px solid white;">
+  <h1 class="titulo-universo">Tienda virtual LULU PERÚ</h1>
+  <p style="color: #e2e8f0; margin-top: 15px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.7);">✨ Envíos a todo el país; Garantizada ✨</p>
 </header>
 
 <main class="container">
@@ -68,18 +187,23 @@
 <div id="modal-container">
   <div class="backdrop" onclick="document.getElementById('modal-container').style.display='none'"></div>
   <div class="modal-content">
-    <h3 id="prod-title" style="margin-top:0">Registro de Envío</h3>
+    <h3 id="prod-title" style="margin-top:0; color: var(--accent);">Detalles del Envío</h3>
     <form id="order-form">
       <div class="form-group"><input type="text" placeholder="Nombre completo" class="form-control" required></div>
-      <div class="form-group"><input type="text" placeholder="DNI (8 dígitos)" class="form-control" pattern="[0-9]{8}" required></div>
-      <div class="form-group"><input type="tel" placeholder="Número de Celular" class="form-control" pattern="[0-9]{9}" required></div>
+      <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex:1"><input type="text" placeholder="DNI (8 dígitos)" class="form-control" pattern="[0-9]{8}" required></div>
+        <div class="form-group" style="flex:1"><input type="tel" placeholder="Celular" class="form-control" pattern="[0-9]{9}" required></div>
+      </div>
       <div class="form-group"><select id="sel-region" class="form-control" required><option value="">Región...</option></select></div>
-      <div class="form-group"><select id="sel-provincia" class="form-control" required disabled><option value="">Provincia...</option></select></div>
-      <div class="form-group"><select id="sel-distrito" class="form-control" required disabled><option value="">Distrito...</option></select></div>
-      <div class="form-group"><input type="text" id="direccion" placeholder="Dirección exacta" class="form-control" required></div>
-      <div style="display:flex; gap:10px; margin-top:20px;">
-        <button type="button" class="btn" style="background:#475569" onclick="document.getElementById('modal-container').style.display='none'">Cancelar</button>
-        <button type="submit" class="btn">Confirmar Pedido</button>
+      <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex:1"><select id="sel-provincia" class="form-control" required disabled><option value="">Provincia...</option></select></div>
+          <div class="form-group" style="flex:1"><select id="sel-distrito" class="form-control" required disabled><option value="">Distrito...</option></select></div>
+      </div>
+      <div class="form-group"><input type="text" id="direccion" placeholder="Dirección exacta / Referencia" class="form-control" required></div>
+      
+      <div style="display:flex; gap:12px; margin-top:25px;">
+        <button type="button" class="btn" style="background:#475569" onclick="document.getElementById('modal-container').style.display='none'">Cerrar</button>
+        <button type="submit" class="btn">Pedir por WhatsApp</button>
       </div>
     </form>
   </div>
@@ -88,17 +212,16 @@
 <div id="login-modal">
   <div class="backdrop" onclick="closeLogin()"></div>
   <div class="modal-content">
-    <h3>Acceso Administrador</h3>
+    <h3 style="text-align: center;">Acceso Panel Control</h3>
     <form id="login-form">
       <div class="form-group"><input type="text" id="admin-user" placeholder="Usuario" class="form-control" required></div>
       <div class="form-group"><input type="password" id="admin-pass" placeholder="Contraseña" class="form-control" required></div>
-      <button type="submit" class="btn">Ingresar</button>
+      <button type="submit" class="btn" style="margin-top: 20px;">Entrar</button>
     </form>
   </div>
 </div>
 
 <script>
-    // FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyBg5CBz8fXgLZDEaKfHmgv71Cxif77XBxo",
         authDomain: "luluperu-efa88.firebaseapp.com",
@@ -111,37 +234,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // RENDER TIENDA
     function renderShop() {
         db.ref('productos').on('value', (snapshot) => {
             const prods = snapshot.val();
             const container = document.getElementById('product-container');
             container.innerHTML = ""; 
-            if (!prods) { container.innerHTML = "<h2>Cargando...</h2>"; return; }
+            if (!prods) { container.innerHTML = "<h2 style='text-align:center; grid-column: 1/-1;'>No hay productos disponibles por ahora.</h2>"; return; }
 
             prods.forEach(p => {
                 let precioHTML = p.onOffer ? 
-                    `<div style="margin: 10px 0;"><span style="text-decoration: line-through; color: var(--text-muted); font-size: 0.9rem;">S/ ${p.price}</span><br><span style="color: #facc15; font-weight: bold; font-size: 1.5rem;">S/ ${p.offerPrice}</span></div>` : 
-                    `<span style="font-size: 1.5rem; font-weight: bold;">S/ ${p.price}</span>`;
+                    `<div class="price-tag"><span class="original-price">S/ ${p.price}</span><span class="current-price">S/ ${p.offerPrice}</span></div>` : 
+                    `<div class="price-tag"><span class="current-price">S/ ${p.price}</span></div>`;
                 
                 container.innerHTML += `
                     <article class="card">
-                        ${p.onOffer ? '<span class="badge-oferta-amarilla">OFERTA 🔥</span>' : ''}
-                        <img src="${p.img}">
-                        <div class="card-info"><h2>${p.name}</h2>${precioHTML}<p>Stock: ${p.stock}</p></div>
-                        <button class="btn js-buy" data-name="${p.name}">Comprar Ahora</button>
+                        ${p.onOffer ? '<span class="badge-oferta">OFERTA</span>' : ''}
+                        <img src="${p.img}" alt="${p.name}">
+                        <div class="card-info">
+                            <div>
+                                <h2>${p.name}</h2>
+                                ${precioHTML}
+                                <p style="font-size: 0.85rem; color: var(--text-muted)">Disponibles: ${p.stock}</p>
+                            </div>
+                            <button class="btn js-buy" data-name="${p.name}">Comprar Ahora</button>
+                        </div>
                     </article>`;
             });
+
             document.querySelectorAll('.js-buy').forEach(b => {
                 b.onclick = () => {
-                    document.getElementById('prod-title').innerText = "Pedido: " + b.dataset.name;
+                    document.getElementById('prod-title').innerText = b.dataset.name;
                     document.getElementById('modal-container').style.display = 'flex';
                 };
             });
         });
     }
 
-    // TU BASE DE DATOS DE REGIONES COMPLETA (RESTAURADA)
     const ubigeo = {
         "Lima": { "Lima": ["Miraflores", "San Isidro", "Santiago de Surco", "La Molina", "San Borja", "San Miguel", "Magdalena del Mar", "Lince", "Jesus Maria", "Pueblo Libre", "Los Olivos", "San Juan de Lurigancho", "Ate", "Chorrillos", "Villa El Salvador"], "Callao": ["Callao", "Bellavista", "La Perla", "La Punta", "Carmen de la Legua", "Ventanilla"], "Cañete": ["San Vicente de Cañete", "Asia", "Mala", "Lunahuaná", "Imperial"] },
         "Junín": { "Chanchamayo": ["San Ramón", "La Merced", "Pichanaqui", "Perené", "Vítoc", "San Luis de Shuaro"], "Huancayo": ["Huancayo", "El Tambo", "Chilca", "San Jerónimo de Tunán", "Pilcomayo"], "Tarma": ["Tarma", "Acobamba", "Palca", "Tapo"], "Satipo": ["Satipo", "Mazamari", "Pangoa", "Coviriali"] },
@@ -156,7 +284,7 @@
         "Ica": { "Ica": ["Ica", "La Tinguiña", "Parcona", "Subtanjalla"], "Chincha": ["Chincha Alta", "Sunampe", "Grocio Prado", "Pueblo Nuevo"], "Pisco": ["Pisco", "Paracas", "San Andrés"] },
         "Loreto": { "Maynas": ["Iquitos", "Punchana", "Belén", "San Juan Bautista"], "Alto Amazonas": ["Yurimaguas"] },
         "Ucayali": { "Coronel Portillo": ["Pucallpa", "Yarinacocha", "Callería"], "Padre Abad": ["Aguaytía"] },
-        "San Martín": { "Moyobamba": ["Moyobamba", "Jepelacio"], "San Martín": ["Tarapoto", "Morales", "La Banda de Shilcayo"], "Rioja": ["Rioja", "Nueva Cajamarca"] },
+        "San Martín": { "San Martín": ["Tarapoto", "Morales", "La Banda de Shilcayo"], "Moyobamba": ["Moyobamba", "Jepelacio"], "Rioja": ["Rioja", "Nueva Cajamarca"] },
         "Ayacucho": { "Huamanga": ["Ayacucho", "Carmen Alto", "San Juan Bautista"], "Huanta": ["Huanta", "Llochegua"] },
         "Cajamarca": { "Cajamarca": ["Cajamarca", "Baños del Inca", "Encañada"], "Jaén": ["Jaén", "Bellavista", "Pucará"] },
         "Tacna": { "Tacna": ["Tacna", "Alto de la Alianza", "Ciudad Nueva", "Pocollay"] },
@@ -178,7 +306,6 @@
         if (this.value) { sDistrito.disabled = false; ubigeo[sRegion.value][this.value].forEach(d => sDistrito.add(new Option(d, d))); }
     };
 
-    // ENVÍO DE PEDIDO A FIREBASE Y WHATSAPP
     document.getElementById('order-form').onsubmit = (e) => {
         e.preventDefault();
         const miTelefono = "986827951";
@@ -188,19 +315,18 @@
             cliente: form[0].value,
             dni: form[1].value,
             celular: form[2].value,
-            producto: document.getElementById('prod-title').innerText.replace("Pedido: ", ""),
+            producto: document.getElementById('prod-title').innerText,
             ubicacion: `${sRegion.value} / ${sProvincia.value} / ${sDistrito.value}`,
             direccion: document.getElementById('direccion').value,
             estado: "Pendiente"
         };
         db.ref('pedidos').push(pedido);
-        const msj = `*LULU PERÚ - NUEVO PEDIDO*%0A*${pedido.producto}*%0A*Cliente:* ${pedido.cliente}%0A*DNI:* ${pedido.dni}%0A*Ubicación:* ${pedido.ubicacion}%0A*Dirección:* ${pedido.direccion}`;
+        const msj = `*LULU PERÚ - NUEVO PEDIDO*%0A---------------------------%0A*Producto:* ${pedido.producto}%0A*Cliente:* ${pedido.cliente}%0A*DNI:* ${pedido.dni}%0A*Celular:* ${pedido.celular}%0A*Ubicación:* ${pedido.ubicacion}%0A*Dirección:* ${pedido.direccion}`;
         window.open(`https://api.whatsapp.com/send?phone=${miTelefono}&text=${msj}`, '_blank');
         document.getElementById('modal-container').style.display = 'none';
         e.target.reset();
     };
 
-    // LOGIN LUCIANO
     function openLogin() { document.getElementById('login-modal').style.display = 'flex'; }
     function closeLogin() { document.getElementById('login-modal').style.display = 'none'; }
     document.getElementById('login-form').onsubmit = function(e) {
