@@ -234,19 +234,18 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Variable para evitar notificaciones falsas al cargar la página
     let primeraCarga = true;
 
     function renderShop() {
         db.ref('productos').on('value', (snapshot) => {
             const prods = snapshot.val();
             
-            // --- LÓGICA DE NOTIFICACIÓN POR OFERTAS ---
+            // --- LÓGICA DE NOTIFICACIÓN POR CAMBIOS EN TIEMPO REAL ---
             if (!primeraCarga && prods && Notification.permission === "granted") {
                 prods.forEach(p => {
                     if (p.onOffer) {
-                        new Notification("🔥 ¡NUEVA OFERTA!", {
-                            body: `¡${p.name} ahora a S/ ${p.offerPrice}! Solo en LULU PERÚ.`,
+                        new Notification("🔥 ¡OFERTA EN LULU PERÚ!", {
+                            body: `${p.name} ahora a S/ ${p.offerPrice}`,
                             icon: "https://i.postimg.cc/rwNNqF4q/cf1c52cf63c043268c4f2dc911317466-free.png"
                         });
                     }
@@ -354,9 +353,18 @@
         else { alert("Acceso denegado"); }
     };
 
+    // --- REGISTRO DEL SERVICE WORKER (PARA APLICATIVO) ---
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW no necesario en local'));
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         renderShop();
-        if ("Notification" in window) Notification.requestPermission();
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
     });
 </script>
 </body>
