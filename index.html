@@ -175,9 +175,9 @@
 
 <header>
   <button class="admin-access" onclick="openLogin()">⚙️</button>
-<img src="https://i.postimg.cc/rwNNqF4q/cf1c52cf63c043268c4f2dc911317466-free.png" style="width:100px; border-radius:50%; margin-bottom:15px; border:2px solid white;">
+  <img src="https://i.postimg.cc/rwNNqF4q/cf1c52cf63c043268c4f2dc911317466-free.png" style="width:100px; border-radius:50%; margin-bottom:15px; border:2px solid white;">
   <h1 class="titulo-universo">Tienda virtual LULU PERÚ</h1>
-  <p style="color: #e2e8f0; margin-top: 15px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.7);">✨ Envíos a todo el país; Garantizada ✨</p>
+  <p style="color: #e2e8f0; margin-top: 15px; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.7);">✨ Envíos a todo el país | Calidad Garantizada ✨</p>
 </header>
 
 <main class="container">
@@ -234,9 +234,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Variable para evitar notificaciones falsas al cargar la página
+    let primeraCarga = true;
+
     function renderShop() {
         db.ref('productos').on('value', (snapshot) => {
             const prods = snapshot.val();
+            
+            // --- LÓGICA DE NOTIFICACIÓN POR OFERTAS ---
+            if (!primeraCarga && prods && Notification.permission === "granted") {
+                prods.forEach(p => {
+                    if (p.onOffer) {
+                        new Notification("🔥 ¡NUEVA OFERTA!", {
+                            body: `¡${p.name} ahora a S/ ${p.offerPrice}! Solo en LULU PERÚ.`,
+                            icon: "https://i.postimg.cc/rwNNqF4q/cf1c52cf63c043268c4f2dc911317466-free.png"
+                        });
+                    }
+                });
+            }
+            primeraCarga = false;
+
             const container = document.getElementById('product-container');
             container.innerHTML = ""; 
             if (!prods) { container.innerHTML = "<h2 style='text-align:center; grid-column: 1/-1;'>No hay productos disponibles por ahora.</h2>"; return; }
@@ -256,7 +273,7 @@
                                 ${precioHTML}
                                 <p style="font-size: 0.85rem; color: var(--text-muted)">Disponibles: ${p.stock}</p>
                             </div>
-                            <button class="btn js-buy" data-name="${p.name}">pedir Ahora</button>
+                            <button class="btn js-buy" data-name="${p.name}">Pedir Ahora</button>
                         </div>
                     </article>`;
             });
@@ -337,7 +354,10 @@
         else { alert("Acceso denegado"); }
     };
 
-    document.addEventListener('DOMContentLoaded', renderShop);
+    document.addEventListener('DOMContentLoaded', () => {
+        renderShop();
+        if ("Notification" in window) Notification.requestPermission();
+    });
 </script>
 </body>
 </html>
